@@ -255,6 +255,21 @@
   .memo .meta{display:flex;justify-content:space-between;gap:8px;font:600 12px var(--mono);color:var(--mute);margin-bottom:6px;flex-wrap:wrap}
   .memo .body{white-space:pre-wrap;word-break:break-word;font-size:15px;margin-bottom:10px}
   .memo .who2{color:var(--r2)}
+  .ckrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 10px}
+  .ck{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:62px;padding:8px 4px;border-radius:14px;border:2px solid transparent;background:#fff;color:var(--ink);font:inherit;text-align:center;line-height:1.25}
+  .ck b{font-size:13px;font-weight:800;letter-spacing:-.03em;display:flex;align-items:center;gap:5px}
+  .ck b::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--mute)}
+  .ck.r0 b::before{background:var(--r0)} .ck.r1 b::before{background:var(--r1)} .ck.r2 b::before{background:var(--r2)}
+  .ck .st{font-size:12.5px;font-weight:700;color:var(--mute)}
+  .ck .tm{font:600 10px var(--mono);color:var(--mute)}
+  .ck.on{background:#F1FFC6}
+  .ck.on .st{color:#4a6a00}
+  .ck.mine{border-color:var(--ink);cursor:pointer}
+  .ck.mine:active{transform:scale(.97)}
+  .ck.mine:not(.on){background:var(--lime)}
+  .ck.mine:not(.on) .st{color:var(--ink)}
+  .ck:disabled{opacity:.6}
+  .memo.ok{background:#E9FBB5}
   .memo textarea{width:100%;min-height:90px;padding:10px;border:1.5px solid var(--ink);border-radius:12px;background:#fff;margin-bottom:8px}
   .badge{display:inline-block;min-width:20px;padding:0 7px;border-radius:999px;background:var(--acc);color:#fff;font-size:12px;text-align:center;margin-left:8px}
   .notes{margin-top:14px;display:flex;flex-direction:column;gap:8px}
@@ -452,7 +467,7 @@
 
 <script>
 /* ★ 주소를 코드에 직접 넣어 두고 싶다면 따옴표 안에 /exec 주소를 붙여 넣으세요. 비워 두면 처음 실행할 때 화면에서 입력받아 기기에 저장합니다. */
-var APP_URL = 'https://script.google.com/macros/s/AKfycbzJ7kqde1n2X_bUTQkxpQ9bWL--xg_Ejp6S7MPxesomPDG0ARJAfWM-D3w3E0VN0lTA/exec';
+var APP_URL = 'https://script.google.com/macros/s/AKfycbzHDSBU01q4PD8g_5BUg5np7GwEnVDIRoWFB5YP3HjvdKvs5xyBp55hxQL8ZBlZLUmq/exec';
 
 /* 서버(구글 스크립트) 연결: 화면은 GitHub에서 즉시 뜨고, 데이터만 서버에서 받아옵니다. */
 window.PA = (function () {
@@ -954,7 +969,10 @@ function addDept(){
 }
 
 /* ---------- 공유 메모 ---------- */
-function recountMemos(){S.data.memoUnchecked=S.data.memos.filter(function(m){return !m.checked;}).length;}
+function myOn(m){var c=m.checks&&m.checks[S.role];return !!(c&&c.on);}
+function recountMemos(){S.data.memoUnchecked=S.data.memos.filter(function(m){return !myOn(m);}).length;}
+function mkChecks(onRole,at){var o={};S.data.roles.forEach(function(r){o[r]={on:r===onRole,at:r===onRole?at:''};});return o;}
+function shortAt(at){return at?at.substring(5).replace('-','/'):'';}
 function renderBadge(){var n=S.data.memoUnchecked,b=$('memoBadge');b.hidden=!n;b.textContent=n;
   try{if(navigator.setAppBadge){if(n)navigator.setAppBadge(n);else navigator.clearAppBadge();}}catch(e){}}
 function saveMemo(){
@@ -962,7 +980,7 @@ function saveMemo(){
   if(!t){toast('메모 내용을 입력해 주세요.');return;}
   $('memoText').value='';toast('메모를 저장했습니다.');
   mutate(function(){
-    S.data.memos.unshift({id:tmpId(),by:S.role,text:t,at:nowStr(),checked:false,checkedBy:'',checkedAt:''});recountMemos();
+    S.data.memos.unshift({id:tmpId(),by:S.role,text:t,at:nowStr(),checks:mkChecks(S.role,nowStr()),checked:false});recountMemos();
   },function(){return api('saveMemo',t,null,S.ym);});
 }
 function openMemos(){
@@ -975,11 +993,36 @@ function renderMemoList(){
   if(!list.length)box.appendChild(el('div','none','저장된 메모가 없습니다.'));
   list.forEach(function(m){box.appendChild(memoCard(m));});
 }
+/** 담임목사·음악목사·교육전도사 확인 칸: 내 칸만 눌러서 바꿀 수 있고, 작성자 칸은 항상 확인 상태 */
+function ckRow(m){
+  var row=el('div','ckrow');
+  S.data.roles.forEach(function(r){
+    var c=(m.checks&&m.checks[r])||{on:false,at:''};
+    var isMine=r===S.role,isAuthor=r===m.by;
+    var cls='ck '+RCLS[r]+(c.on?' on':'')+(isMine?' mine':'');
+    var b=el(isMine&&!isAuthor?'button':'div',cls);
+    if(b.tagName==='BUTTON'){b.type='button';if(isTmp(m.id))b.disabled=true;}
+    b.appendChild(el('b','',r));
+    b.appendChild(el('span','st',isAuthor?'✔ 작성':(c.on?'✔ 확인':(isMine?'눌러서 확인':'미확인'))));
+    b.appendChild(el('span','tm',c.on?shortAt(c.at):'\u00a0'));
+    if(isMine&&!isAuthor){
+      b.setAttribute('aria-pressed',c.on?'true':'false');
+      b.addEventListener('click',function(){
+        var next=!c.on;
+        mutate(function(){var x=S.data.memos.filter(function(y){return y.id===m.id;})[0];
+          if(x){x.checks=x.checks||{};x.checks[S.role]={on:next,at:next?nowStr():''};
+            x.checked=S.data.roles.every(function(q){return x.checks[q]&&x.checks[q].on;});}recountMemos();},
+          function(){return api('checkMemo',m.id,next,S.ym);});
+      });
+    }
+    row.appendChild(b);
+  });
+  return row;
+}
 function memoCard(m){
   var c=el('div','memo'+(m.checked?' ok':'')+(isTmp(m.id)?' pending':''));
   var meta=el('div','meta');
   meta.appendChild(el('span','',m.by+' · '+m.at));
-  if(m.checked)meta.appendChild(el('span','who2','✔ '+m.checkedBy+' 확인'));
   c.appendChild(meta);
   var bt=el('div','btns');
   if(S.memoEditId===m.id){
@@ -991,7 +1034,7 @@ function memoCard(m){
     sv.addEventListener('click',function(){
       var t=ta.value.trim();if(!t){toast('메모 내용을 입력해 주세요.');return;}
       S.memoEditId=null;toast('수정했습니다.');
-      mutate(function(){var x=S.data.memos.filter(function(y){return y.id===m.id;})[0];if(x){x.text=t;x.checked=false;x.checkedBy='';x.checkedAt='';}recountMemos();},
+      mutate(function(){var x=S.data.memos.filter(function(y){return y.id===m.id;})[0];if(x){x.text=t;x.checks=mkChecks(S.role,nowStr());x.checked=false;}recountMemos();},
         function(){return api('saveMemo',t,m.id,S.ym);});
     });
     cn.addEventListener('click',function(){S.memoEditId=null;renderMemoList();});
@@ -999,15 +1042,7 @@ function memoCard(m){
     return c;
   }
   c.appendChild(el('div','body',m.text));
-  var ck=el('button','btn sm '+(m.checked?'light':'gold'),m.checked?'확인 취소':'확인했어요');ck.type='button';
-  if(isTmp(m.id))ck.disabled=true;
-  ck.addEventListener('click',function(){
-    var next=!m.checked;
-    mutate(function(){var x=S.data.memos.filter(function(y){return y.id===m.id;})[0];
-      if(x){x.checked=next;x.checkedBy=next?S.role:'';x.checkedAt=next?nowStr():'';}recountMemos();},
-      function(){return api('checkMemo',m.id,next,S.ym);});
-  });
-  bt.appendChild(ck);
+  c.appendChild(ckRow(m));
   if(mine(m.by)){
     var ed=el('button','btn sm light','수정');ed.type='button';
     var dl=el('button','btn sm danger','삭제');dl.type='button';
@@ -1134,7 +1169,7 @@ function init(){
     window.PA.call('warm',[]).then(checkVer,function(){});
   }
 }
-var CLIENT_VER=6,MIN_SERVER=5;
+var CLIENT_VER=7,MIN_SERVER=6;
 window.__checkVer=function(r){checkVer(r);};
 function checkVer(r){
   var t=$('verTag'),v=r&&r.ver;
