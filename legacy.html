@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>우리는교회 목회팀</title>
+
+<!-- 홈 화면에 추가했을 때 주소창 없이 전체 화면으로 실행 -->
+<meta name="theme-color" content="#0E0E10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="목회팀">
+<meta name="application-name" content="우리는교회 목회팀">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:#0E0E10;overscroll-behavior:none;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:#fff}
+  /* 위(상태바 자리)는 어두운 색, 아래(홈 막대 자리)는 앱 배경색으로 이어 붙입니다 */
+  #shell{position:fixed;inset:0;display:flex;flex-direction:column;background:#0E0E10}
+  #shell .top{flex:0 0 env(safe-area-inset-top);background:#0E0E10}
+  #shell .bot{flex:0 0 env(safe-area-inset-bottom);background:#F2F0EB}
+  #app{flex:1 1 auto;width:100%;border:0;display:block;background:#F2F0EB;min-height:0}
+
+  /* 불러오는 동안 보이는 화면 */
+  #splash{position:fixed;inset:0;z-index:5;background:#0E0E10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .25s}
+  #splash.off{opacity:0;pointer-events:none}
+  #splash img{width:92px;height:92px;border-radius:22px}
+  #splash b{font-size:20px;letter-spacing:-.03em}
+  #splash i{width:34px;height:34px;border-radius:50%;border:3px solid #333;border-top-color:#D7FF3A;animation:sp .8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  /* 처음 한 번 주소 입력 화면 */
+  #setup{position:fixed;inset:0;z-index:6;background:#F2F0EB;color:#0E0E10;display:none;align-items:center;justify-content:center;padding:24px}
+  #setup.on{display:flex}
+  #setup .box{width:100%;max-width:460px;background:#fff;border-radius:24px;padding:26px 22px;box-shadow:0 10px 40px rgba(0,0,0,.08)}
+  #setup h1{margin:0 0 6px;font-size:22px;letter-spacing:-.04em}
+  #setup p{margin:0 0 14px;font-size:14px;line-height:1.6;color:#4A4740}
+  #setup input{width:100%;font:inherit;font-size:15px;padding:13px 14px;border:1.5px solid #E4E0D6;border-radius:14px;background:#F7F5F0;outline:none}
+  #setup input:focus{border-color:#0E0E10}
+  #setup button{margin-top:12px;width:100%;border:0;border-radius:999px;background:#D7FF3A;color:#0E0E10;font:inherit;font-weight:800;font-size:16px;padding:14px;cursor:pointer}
+  #setup .err{color:#D92D20;font-size:13px;min-height:18px;margin-top:8px}
+
+  /* 연결이 안 될 때 */
+  #fail{position:fixed;inset:0;z-index:6;background:#0E0E10;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+  #fail.on{display:flex}
+  #fail button{border:0;border-radius:999px;padding:12px 26px;font:inherit;font-weight:800;background:#D7FF3A;color:#0E0E10;cursor:pointer}
+  #fail a{color:#9E9A8F;font-size:13px;cursor:pointer;text-decoration:underline}
+</style>
+</head>
+<body>
+
+<div id="shell">
+  <div class="top"></div>
+  <iframe id="app" title="우리는교회 목회팀" allow="clipboard-write"></iframe>
+  <div class="bot"></div>
+</div>
+
+<div id="splash"><img src="icons/icon-192.png" alt=""><b>우리는교회 목회팀</b><i></i></div>
+
+<div id="setup">
+  <div class="box">
+    <h1>처음 한 번만 설정해요</h1>
+    <p>구글 앱스 스크립트에서 <b>배포</b>한 웹 앱 주소(<code>https://script.google.com/macros/s/…/exec</code>)를 붙여 넣어 주세요. 이 기기에 저장되어 다음부터는 묻지 않습니다.</p>
+    <input id="urlIn" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://script.google.com/macros/s/.../exec">
+    <div class="err" id="urlErr"></div>
+    <button id="urlGo" type="button">저장하고 시작</button>
+  </div>
+</div>
+
+<div id="fail">
+  <div style="font-size:18px;font-weight:800">연결하지 못했어요</div>
+  <div style="font-size:14px;color:#BDB9AE;line-height:1.6">인터넷 연결을 확인한 뒤 다시 시도해 주세요.</div>
+  <button id="retry" type="button">다시 시도</button>
+  <a id="resetUrl">앱 주소 다시 입력</a>
+</div>
+
+<script>
+/* ★ 주소를 코드에 직접 넣어 두고 싶다면 아래 따옴표 안에 /exec 주소를 붙여 넣으세요.
+     비워 두면 처음 실행할 때 화면에서 입력받아 기기에 저장합니다. */
+var APP_URL = '';
+
+(function () {
+  var KEY = 'pastoral_app_url';
+  var $ = function (id) { return document.getElementById(id); };
+  var frame = $('app'), timer = null;
+
+  function getUrl() {
+    if (APP_URL) return APP_URL;
+    try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; }
+  }
+  function saveUrl(u) { try { localStorage.setItem(KEY, u); } catch (e) {} }
+  function clearUrl() { try { localStorage.removeItem(KEY); } catch (e) {} }
+  function valid(u) { return /^https:\/\/script\.google\.com\/(a\/[^\/]+\/)?macros\/s\/[^\/\s]+\/exec\/?(\?.*)?$/.test(u); }
+
+  function show(id, on) { $(id).classList[on ? 'add' : 'remove']('on'); }
+
+  function launch() {
+    var u = getUrl();
+    show('fail', false);
+    if (!u) { $('splash').classList.add('off'); show('setup', true); return; }
+    show('setup', false);
+    $('splash').classList.remove('off');
+    clearTimeout(timer);
+    timer = setTimeout(function () { $('splash').classList.add('off'); show('fail', true); }, 20000);
+    frame.onload = function () { clearTimeout(timer); $('splash').classList.add('off'); };
+    frame.src = u;
+  }
+
+  $('urlGo').onclick = function () {
+    var u = $('urlIn').value.trim();
+    if (!valid(u)) { $('urlErr').textContent = '주소가 올바르지 않아요. …/exec 로 끝나는 웹 앱 주소를 붙여 넣어 주세요.'; return; }
+    $('urlErr').textContent = ''; saveUrl(u); launch();
+  };
+  $('urlIn').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('urlGo').click(); });
+  $('retry').onclick = launch;
+  $('resetUrl').onclick = function () { clearUrl(); frame.removeAttribute('src'); launch(); };
+
+  // 앱을 다시 켰을 때(백그라운드 → 앞으로) 연결이 끊겨 있으면 새로 불러옵니다
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible' && getUrl() && !frame.getAttribute('src')) launch();
+  });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  }
+  launch();
+})();
+</script>
+</body>
+</html>
