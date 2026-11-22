@@ -225,6 +225,17 @@
 
   /* 부서별 목록 */
   .deptList{margin-top:16px;display:flex;flex-direction:column;gap:7px}
+  /* PC: 부서별 사역은 아래 한 줄 전체 폭으로 넓게(월별 사역 박스는 늘어나지 않음). 모바일은 그대로 */
+  @media(min-width:900px){
+    #monthCard{align-self:start}
+    #deptCard{grid-column:1 / -1}
+    #deptCard .frm{grid-template-columns:minmax(0,1.3fr) minmax(0,1.6fr) auto;align-items:end;gap:12px 14px}
+    #deptCard .frm .deptRowSel{grid-column:1 / 3;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+    #deptCard .frm > div:nth-child(2){grid-column:1 / 3}
+    #deptCard .frm .btns{grid-column:3;grid-row:1 / span 2;align-self:end}
+    #deptList{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 18px;align-items:start}
+    #deptList > .none{grid-column:1 / -1}
+  }
   .deptRow{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:16px;font-size:15px;background:var(--tint)}
   .deptRow.past{opacity:.5}
   .deptRowSel{display:grid;gap:12px}
@@ -347,7 +358,7 @@
       <div id="weekBody"></div>
     </section>
 
-    <section class="card" id="monthCard" style="grid-row:span 2">
+    <section class="card" id="monthCard">
       <h2><span class="no">02</span>월별 사역 <span class="lab" id="monthLabel"></span></h2>
       <div class="calHead">
         <div class="grp"><button class="navBtn" id="prevM" aria-label="이전 달">←</button><button class="navBtn" id="nextM" aria-label="다음 달">→</button></div>
@@ -467,7 +478,7 @@
 
 <script>
 /* ★ 주소를 코드에 직접 넣어 두고 싶다면 따옴표 안에 /exec 주소를 붙여 넣으세요. 비워 두면 처음 실행할 때 화면에서 입력받아 기기에 저장합니다. */
-var APP_URL = 'https://script.google.com/macros/s/AKfycbxC6RYN7xbqbuBIQadzUR-I7ABQO_Y0a3cFTsi0hiaIfhnnXP0JQrUZJ98jY-G21zmf/exec';
+var APP_URL = 'https://script.google.com/macros/s/AKfycbzHDSBU01q4PD8g_5BUg5np7GwEnVDIRoWFB5YP3HjvdKvs5xyBp55hxQL8ZBlZLUmq/exec';
 
 /* 서버(구글 스크립트) 연결: 화면은 GitHub에서 즉시 뜨고, 데이터만 서버에서 받아옵니다. */
 window.PA = (function () {
@@ -1169,7 +1180,7 @@ function init(){
     window.PA.call('warm',[]).then(checkVer,function(){});
   }
 }
-var CLIENT_VER=7,MIN_SERVER=6;
+var CLIENT_VER=8,MIN_SERVER=6;
 window.__checkVer=function(r){checkVer(r);};
 function checkVer(r){
   var t=$('verTag'),v=r&&r.ver;
