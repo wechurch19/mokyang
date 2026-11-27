@@ -1,5 +1,5 @@
 /* 홈 화면 설치용 서비스 워커. 서버(구글 스크립트) 요청은 건드리지 않습니다. */
-var CACHE = 'pastoral-shell-v12';
+var CACHE = 'pastoral-shell-v13';
 var FILES = ['./', './index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/icon.svg'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }).then(function () { return self.skipWaiting(); }));

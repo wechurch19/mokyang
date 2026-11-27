@@ -524,7 +524,7 @@
 
 <script>
 /* ★ 주소를 코드에 직접 넣어 두고 싶다면 따옴표 안에 /exec 주소를 붙여 넣으세요. 비워 두면 처음 실행할 때 화면에서 입력받아 기기에 저장합니다. */
-var APP_URL = 'https://script.google.com/macros/s/AKfycbwEvMnDrKisI_xjoDGZ79tzJsnsz0NcQNUVrFuIo8CoGfU9c-0KP1C1susWFo534W5f/exec';
+var APP_URL = 'https://script.google.com/macros/s/AKfycbzHDSBU01q4PD8g_5BUg5np7GwEnVDIRoWFB5YP3HjvdKvs5xyBp55hxQL8ZBlZLUmq/exec';
 
 /* 서버(구글 스크립트) 연결: 화면은 GitHub에서 즉시 뜨고, 데이터만 서버에서 받아옵니다. */
 window.PA = (function () {
@@ -724,11 +724,12 @@ function showCached(role){
   return true;
 }
 function enterApp(init){
+  var wasOpen=!$('app').hidden;                      // 비밀번호 입력 직후 이미 화면이 열려 있으면 스크롤 위치를 건드리지 않습니다
   bootLock(false);
   $('login').hidden=true;$('app').hidden=false;
   $('whoami').textContent=S.role;$('eOwner').value=S.role;
   S.ym=null;S.data=null;S.notes=[];S.inflight=0;S.noteInflight=0;resetNote();renderNotes();
-  window.scrollTo(0,0);
+  if(!wasOpen)window.scrollTo(0,0);
   if(init&&init.snap){
     S.notes=init.notes||[];applySnap(init.snap);renderNotes();
   }else{
@@ -1425,7 +1426,7 @@ window.warmServer=function(force){
   if(!window.PA.url()||(!force&&Date.now()-__wl<20000))return;
   __wl=Date.now();window.PA.call('warm',[]).then(checkVer,function(){});
 };
-var CLIENT_VER=12,MIN_SERVER=8;
+var CLIENT_VER=13,MIN_SERVER=8;
 window.__checkVer=function(r){checkVer(r);};
 function checkVer(r){
   var t=$('verTag'),v=r&&r.ver;
