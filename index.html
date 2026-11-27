@@ -53,6 +53,10 @@
     font-size:clamp(20px,2.6vw,27px);font-weight:800;letter-spacing:-.03em;
     transition:background .1s,color .1s,border-color .1s,transform .08s}
   .roleBtn::before{content:'0' counter(r);font:600 13px var(--mono);opacity:.55}
+  a.roleBtn{text-decoration:none}
+  .roleBtn.linkBtn{grid-column:1 / -1;border-color:var(--lime);color:var(--lime)}
+  .roleBtn.linkBtn::after{content:'↗'}
+  .roleBtn.linkBtn:hover{background:var(--lime);color:var(--ink)}
   .roleBtn::after{content:'→';margin-left:auto;font-weight:400;transition:transform .12s}
   .roleBtn:hover,.roleBtn:focus-visible{background:var(--lime);color:var(--ink);border-color:var(--lime);outline:none}
   .roleBtn:hover::after{transform:translateX(5px)}
@@ -517,7 +521,7 @@
 
 <script>
 /* ★ 주소를 코드에 직접 넣어 두고 싶다면 따옴표 안에 /exec 주소를 붙여 넣으세요. 비워 두면 처음 실행할 때 화면에서 입력받아 기기에 저장합니다. */
-var APP_URL = 'https://script.google.com/macros/s/AKfycbzJYD44v7yysLNn2nYt4y09pzZDvM4qw7Tsy1NrB1qfZPNoVYYSL0uYuVykZ1hlcpv2/exec';
+var APP_URL = 'https://script.google.com/macros/s/AKfycbzHDSBU01q4PD8g_5BUg5np7GwEnVDIRoWFB5YP3HjvdKvs5xyBp55hxQL8ZBlZLUmq/exec';
 
 /* 서버(구글 스크립트) 연결: 화면은 GitHub에서 즉시 뜨고, 데이터만 서버에서 받아옵니다. */
 window.PA = (function () {
@@ -623,6 +627,8 @@ function buildLogin(){
     b.addEventListener('click',function(){openPin(r);});
     box.appendChild(b);
   });
+  var lk=el('a','roleBtn linkBtn','자료공유');lk.href='https://wechurch19.github.io/file/';lk.id='fileLink';
+  box.appendChild(lk);
   var keys=$('keys');
   ['1','2','3','4','5','6','7','8','9','cancel','0','del'].forEach(function(k){
     var b=el('button','key'+(k.length>1?' fn':''),k==='del'?'⌫':k==='cancel'?'취소':k);b.type='button';
@@ -1359,7 +1365,7 @@ function init(){
     window.PA.call('warm',[]).then(checkVer,function(){});
   }
 }
-var CLIENT_VER=9,MIN_SERVER=7;
+var CLIENT_VER=10,MIN_SERVER=7;
 window.__checkVer=function(r){checkVer(r);};
 function checkVer(r){
   var t=$('verTag'),v=r&&r.ver;
